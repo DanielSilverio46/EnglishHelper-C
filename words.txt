@@ -1,0 +1,7 @@
+word:palavra
+apple:maca
+case:caso
+left:esquerda
+right:direita
+communism:comunismo
+capitalism:capitalismo

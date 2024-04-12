@@ -1,2 +1,2 @@
 build:
-	gcc -mwindows -o english.exe src/gui.c
+	gcc -mwindows -o english.exe src/gui.c src/word.c
