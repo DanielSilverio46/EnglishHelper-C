@@ -1,15 +1,21 @@
 #include <windows.h>
+#include <commctrl.h>
+#include <string.h>
+
 #include "word.h"
 
-HWND boxTextInput;
-char guessWord[255], *portu, *engl;
-
-int points, fails;
-
 LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK KeyEnterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+	UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 void DrawTexts(HDC hdc, RECT rect);
-void intToStr(int num, char *store);
+void intToStr(unsigned int num, char *store);
+
+char guessWord[255], TextInput[50], *portu, *engl;
+unsigned int points=0, fails=0;
+
+HWND boxTextInput;
+WNDPROC oldWndProc;
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
@@ -41,7 +47,6 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	if (hwnd == NULL)
 		return 0;
 
-
 	ShowWindow(hwnd, nCmdShow);
 
 	randomWord(guessWord, sizeof(guessWord));
@@ -58,15 +63,13 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	char TextInput[50];
-
 	switch(uMsg)
 	{
 		case WM_CREATE:
 			boxTextInput = CreateWindow(
 				"EDIT",
 				"",
-				WS_BORDER | WS_VISIBLE | WS_CHILD,
+				WS_BORDER | WS_VISIBLE | WS_CHILD | ES_LEFT | ES_LOWERCASE,
 			  // x    y   width  height
 				350, 200,  200,    20,
 				hwnd,
@@ -74,6 +77,9 @@ LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				NULL,
 				NULL
 			);
+
+			oldWndProc = (WNDPROC)SetWindowLongPtr(boxTextInput, GWLP_WNDPROC,
+				(LONG_PTR)KeyEnterProc);
 
 			CreateWindow(
 				"BUTTON",
@@ -93,9 +99,14 @@ LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				case 1:
 					GetWindowText(boxTextInput, TextInput, sizeof(TextInput));
+	
+					if (strcmp(engl, TextInput) == 0) points++;
+					else fails++;
 
 					randomWord(guessWord, sizeof(guessWord));
 					divideTuple(guessWord, &engl, &portu);
+
+					SetWindowText(boxTextInput, 0);
 
 					InvalidateRect(hwnd, NULL, 0);
 					UpdateWindow(hwnd);
@@ -103,10 +114,6 @@ LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 			}
 
-			break;
-
-		case WM_DESTROY:
-			PostQuitMessage(0);
 			break;
 
 		case WM_PAINT:
@@ -128,6 +135,11 @@ LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			break;
 
+		case WM_DESTROY:
+			PostQuitMessage(0);
+
+			break;
+
 		default:
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	};
@@ -135,30 +147,44 @@ LRESULT CALLBACK Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void intToStr(int num, char *store)
+LRESULT CALLBACK KeyEnterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+	UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	int decimalPlaces = -1, buffNum = num;
+	if (uMsg == WM_KEYDOWN)
+	{
+		SetWindowText(hwnd, 0);
+		return 0;
+	};
+
+	return CallWindowProc(oldWndProc, hwnd, uMsg, wParam, lParam);
+}
+
+void intToStr(unsigned int num, char *store)
+{
+	int decimalPlaces = 0;
+
+	if (num < 10) {
+		decimalPlaces = 0;
+	} else if (num < 100) {
+		decimalPlaces = 1;
+	} else if (num < 1000){
+		decimalPlaces = 2;
+	};
 
 	do {
-		buffNum /= 10;
-		decimalPlaces++;
-	} while (buffNum != 0);
-
-	while (num != 0) {
 		store[decimalPlaces] = (num % 10) + 0x30;
 		decimalPlaces--;
 
 		num /= 10;
-
-	}
+	} while (num != 0);
 }
 
 void DrawTexts(HDC hdc, RECT rect)
 {
 	char PointsStr[100] = "Points: ", FailsStr[100] = "Fails: ";
 
-	intToStr(10, &PointsStr[8]);
-	intToStr(10, &FailsStr[7]);
+	intToStr(points, &PointsStr[8]);
+	intToStr(fails, &FailsStr[7]);
 
 	rect.top += 50;
 	rect.left += 100;
