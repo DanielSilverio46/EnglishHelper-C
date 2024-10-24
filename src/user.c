@@ -13,24 +13,34 @@ void initUser(void)
     user->Fails = 0x00;
 }
 
-// DrawPointsUser
-void userScoreToString(HDC hdc, RECT *rect, int points, int fails)
+void SetUserPoints(struct User* user, uint16_t points)
 {
-	char PointsStr[0x0c] = "Points: ", FailsStr[0x0b] = "Fails: ";
+	user->Points = points;
+}
 
-	intToStr(points, &PointsStr[0x08], ((sizeof(PointsStr) - 0x08) / sizeof(char)));
-	intToStr(fails, &FailsStr[0x07], ((sizeof(PointsStr) - 0x07) / sizeof(char)));
+void SetUserFaills(struct User* user, uint16_t faills)
+{
+	user->Fails = faills;
+}
 
-	// Drawing points and fails of user
-	rect->left += 0x32;
-	rect->right -= 0x32; 
-	rect->top += 0x3c;
+void AddUserPoints(struct User* user, int points_to_sum)
+{
+	if (points_to_sum == NULL) points_to_sum = 1;
+	user->Points += points_to_sum;
+}
 
-	DrawText(hdc, PointsStr, (int8_t)0xff, rect, DT_TOP | DT_LEFT);
-	DrawText(hdc, FailsStr, (int8_t)0xff, rect, DT_TOP | DT_RIGHT);
+void AddUserFaills(struct User* user, int faills_to_sum)
+{
+	if (faills_to_sum == NULL) faills_to_sum = 1;
+	user->Points += faills_to_sum;
+}
 
-	// Reset Values of RectS
-	rect->left -= 0x32;
-	rect->right += 0x32;
-	rect->top -= 0x3c;
+unsigned int GetUserPoints(struct User* user)
+{
+	return user->Points;
+}
+
+unsigned int GetUserFails(struct User* user)
+{
+	return user->Fails;
 }

@@ -3,24 +3,26 @@
 
 #include <windows.h>
 #include <commctrl.h>
+
 #include <stdint.h>
+#include <string.h>
 
-#define MAIN_WINDOW_HEIGHT 0x190
-#define MAIN_WINDOW_WIDTH 0x190
-
+/// Defining height and width of windows
 #define TEXT_BOX_WINDOW_WIDTH 0xC8
 #define TEXT_BOX_WINDOW_HEIGHT 0x14
 
 #define BUTTON_WINDOW_WIDTH 0x32
 #define BUTTON_WINDOW_HEIGHT 0x19
 
+/// Defining child windows identifiers
+#define OK_BUTTON 0X02
+#define WORDS_BUTTON 0X03
+#define TEXT_BOX_MAIN_WINDOW 0x01
+
+/// Defining error
+#define NOT_POSSIBLE_CLEATE_CHILD 0x01
+
 __declspec(dllexport) extern LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-__declspec(dllexport) extern LRESULT CALLBACK FileControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-__declspec(dllexport) extern LRESULT CALLBACK WordsSpecialActionsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-__declspec(dllexport) extern LRESULT CALLBACK KeyEnterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData, HWND HwndMain);
-
-__declspec(dllexport) extern void GetWND_Of_HWND(HWND hwnd, WNDCLASS *wnd);
-__declspec(dllexport) extern void DrawPointsUser(HDC hdc, RECT *rect, int points, int fails);
+__declspec(dllexport) extern LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #endif

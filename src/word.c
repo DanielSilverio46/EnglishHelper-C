@@ -4,7 +4,7 @@
 
 FILE *wordFile;
 
-int totalTuples(void)
+__declspec(dllexport) int totalTuples(void)
 {
 	int i = 0;
 	char trash[255];
@@ -16,17 +16,17 @@ int totalTuples(void)
 	return i;
 }
 
-void loadWordFile(void)
+__declspec(dllexport) void loadWordFile(void)
 {
 	wordFile = fopen("words.txt", "r");
 }
 
-void closeWordFile(void)
+__declspec(dllexport) void closeWordFile(void)
 {
 	fclose(wordFile);
 }
 
-void randomWord(char *store, size_t lengthStore)
+__declspec(dllexport) void randomWord(char *store, size_t lengthStore)
 {
 	int randWord = 0;
 	do {
@@ -40,7 +40,7 @@ void randomWord(char *store, size_t lengthStore)
 	fseek(wordFile, 0, SEEK_SET);
 }
 
-void divideTuple(char *tuple, char **english, char **portuguese)
+__declspec(dllexport) void divideTuple(char *tuple, char **english, char **portuguese)
 {
 	int i = 0;
 
