@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-int intToStr(unsigned int num, char *store, uint8_t length_store)
+int intToStr(unsigned int num, char *store, int length_store)
 {
 	uint8_t decimal_places = 0x00;
 
@@ -12,7 +12,7 @@ int intToStr(unsigned int num, char *store, uint8_t length_store)
 	store[decimal_places+0x01] = '\0'; 
 
 	do {
-		store[decimal_places] = (char)(num % 0x0A + 0x30);
+		store[decimal_places] = (char)(num % 0x0A) + 0x30;
 		num /= 0x0A;
 		decimal_places--;
 	} while (num != 0x00);

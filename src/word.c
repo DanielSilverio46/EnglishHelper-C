@@ -4,51 +4,72 @@
 
 FILE *wordFile;
 
+__declspec(dllexport) void loadWordFile(void)
+{
+	wordFile = fopen("./words.txt", "r");
+
+	if (wordFile == NULL)
+	{
+		char _word[] = "cat:gato\n";
+	
+		wordFile = fopen("./words.txt", "a");
+		fwrite(_word, sizeof(char), sizeof(_word) / sizeof(char), wordFile);
+		fseek(wordFile, 0, SEEK_SET);
+	}
+}
+
+__declspec(dllexport) void closeWordFile(void)
+{
+	if (wordFile != NULL) fclose(wordFile);
+}
+
+__declspec(dllexport) void updateWordFile(const char *Words, size_t Total_Letters)
+{
+	if (Words == NULL && wordFile == NULL) return;
+
+	fwrite(Words, sizeof(char), Total_Letters, wordFile);
+}
 __declspec(dllexport) int totalTuples(void)
 {
+	if (wordFile == NULL) return -1;
+	
 	int i = 0;
-	char trash[255];
+	char buff[255];
 
-	for (; fgets(trash, sizeof(trash), wordFile) != NULL; ++i);
+	for (; fgets(buff, sizeof(buff), wordFile) != NULL; ++i);
 
 	fseek(wordFile, 0, SEEK_SET);
 
 	return i;
 }
 
-__declspec(dllexport) void loadWordFile(void)
+__declspec(dllexport) void randomWord(char *store, unsigned int lengthStore)
 {
-	wordFile = fopen("words.txt", "r");
-}
+	if (wordFile == NULL) return;
 
-__declspec(dllexport) void closeWordFile(void)
-{
-	fclose(wordFile);
-}
+	int randWord = 0x00;
 
-__declspec(dllexport) void randomWord(char *store, size_t lengthStore)
-{
-	int randWord = 0;
 	do {
 		srand(time(NULL));
-		randWord = rand() % (totalTuples() + 1);
+		int t = totalTuples();
+		if (t == -1) return;
+
+		randWord = rand() % (t + 0x01);
 	} while (randWord == 0);
 
-	for (int i=0; i != randWord; ++i)
-		fgets(store, lengthStore, wordFile);
+	for (int i=0x00; i != randWord; ++i) fgets(store, lengthStore, wordFile);
 
-	fseek(wordFile, 0, SEEK_SET);
+	fseek(wordFile, 0x00, SEEK_SET);
 }
 
-__declspec(dllexport) void divideTuple(char *tuple, char **english, char **portuguese)
+__declspec(dllexport) void splitTuple(char *tuple, char **english, char **portuguese)
 {
 	int i = 0;
 
 	*english = tuple;
 
-	while(tuple[i] != ':') ++i;
+	while(tuple[i]!=':') ++i;
 	tuple[i] = '\0';
 
 	*portuguese = &tuple[i+1];
-
 }

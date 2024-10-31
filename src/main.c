@@ -1,7 +1,6 @@
 #include "headers/main.h"
 #include "headers/window_flow.h"
-
-HWND hwndWords = NULL;
+#include "headers/word.h"
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
@@ -16,7 +15,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	WNDCLASS WordsWindowClass = {};
 	WordsWindowClass.lpfnWndProc = WordsProc;
-	WordsWindowClass.hInstance = hinstance+0x01;
+	WordsWindowClass.hInstance = hinstance;
 	WordsWindowClass.lpszClassName = WORDS_CLASS;
 	WordsWindowClass.hbrBackground = MAIN_COLOR_BACKGROUND_WINDOW;
 
@@ -34,7 +33,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 		0x00, WORDS_CLASS, "Words",
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT, MAIN_WINDOW_HEIGHT, MAIN_WINDOW_WIDTH,
-		NULL, NULL, hinstance+0x01, NULL
+		NULL, NULL, hinstance, NULL
 	);
 
 	if (hwnd_main == NULL || hwnd_words == NULL)
@@ -42,6 +41,8 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 		MessageBox(NULL, "Not possible load windows", NULL, MB_OK | MB_ICONHAND);
 		return 0x00;
 	}
+
+	loadWordFile();
 
 	ShowWindow(hwnd_main, SHOW_OPENWINDOW);
 	ShowWindow(hwnd_words, SW_HIDE);
