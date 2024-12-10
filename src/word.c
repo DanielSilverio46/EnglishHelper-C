@@ -1,21 +1,63 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "headers\word.h"
 
-FILE *wordFile;
+FILE *wordFile = NULL;
 
-__declspec(dllexport) void loadWordFile(void)
+__declspec(dllexport) void InitTuple(Tuple *tuple)
 {
-	wordFile = fopen("./words.txt", "r");
+	tuple = malloc(sizeof(Tuple));
 
-	if (wordFile == NULL)
-	{
-		char _word[] = "cat:gato\n";
-	
-		wordFile = fopen("./words.txt", "a");
-		fwrite(_word, sizeof(char), sizeof(_word) / sizeof(char), wordFile);
-		fseek(wordFile, 0, SEEK_SET);
+	tuple->str1 = NULL;
+	tuple-> str2 = NULL;
+
+	tuple->sep = ':';
+	tuple->isep = 0x00;
+}
+
+__declspec(dllexport) inline void SetStrs(Tuple *tuple, char *str1, char *str2)
+{
+	tuple->str1 = str1;
+	tuple->str2 = str2;
+}
+
+__declspec(dllexport) inline void SetSep(Tuple *tuple, char sep)
+{
+	tuple->sep = sep;
+}
+
+__declspec(dllexport) inline void SetIsep(Tuple *tuple, unsigned int i)
+{
+	tuple->isep = i;
+}
+
+__declspec(dllexport) void FreeTuple(Tuple *tuple)
+{
+	tuple->str1 = NULL;
+	tuple->str2 = NULL;
+	tuple->sep = '\0';
+	tuple->isep = 0x00;
+
+	free(tuple);
+}
+
+
+__declspec(dllexport) void createWordFile(void)
+{
+	wordFile = fopen("words.txt", "w");
+
+	if (wordFile != NULL) {
+		fwrite("gato:cat", sizeof(char), 8, wordFile);
+		closeWordFile();
+
+		loadWordFile();
 	}
+}
+
+__declspec(dllexport) bool loadWordFile(void)
+{
+	wordFile = fopen("words.txt", "r");
+
+	if (wordFile == NULL) return false;
+	else return true;
 }
 
 __declspec(dllexport) void closeWordFile(void)
@@ -25,51 +67,78 @@ __declspec(dllexport) void closeWordFile(void)
 
 __declspec(dllexport) void updateWordFile(const char *Words, size_t Total_Letters)
 {
-	if (Words == NULL && wordFile == NULL) return;
+	if (Words == NULL) return;
 
+	if (wordFile != NULL) closeWordFile();
+
+	wordFile = fopen("words.txt", "w");
 	fwrite(Words, sizeof(char), Total_Letters, wordFile);
+	fclose(wordFile);
+
+	loadWordFile();
 }
+
 __declspec(dllexport) int totalTuples(void)
 {
-	if (wordFile == NULL) return -1;
+	if (wordFile == NULL) return -0x01;
 	
-	int i = 0;
-	char buff[255];
+	int i = 0x00;
+	char buff[0xff];
 
 	for (; fgets(buff, sizeof(buff), wordFile) != NULL; ++i);
 
-	fseek(wordFile, 0, SEEK_SET);
+	fseek(wordFile, 0x00, SEEK_SET);
 
 	return i;
 }
 
-__declspec(dllexport) void randomWord(char *store, unsigned int lengthStore)
+__declspec(dllexport) void getRandomTuple(char *store, unsigned int lengthStore)
 {
 	if (wordFile == NULL) return;
+	
+	srand(time(NULL));
 
 	int randWord = 0x00;
-
-	do {
-		srand(time(NULL));
-		int t = totalTuples();
-		if (t == -1) return;
-
-		randWord = rand() % (t + 0x01);
-	} while (randWord == 0);
+	int t = totalTuples();
+	
+	if (t == -0x01) return;
+	
+	while (randWord == 0x00) randWord = rand() % (t + 0x01);
 
 	for (int i=0x00; i != randWord; ++i) fgets(store, lengthStore, wordFile);
 
 	fseek(wordFile, 0x00, SEEK_SET);
 }
 
-__declspec(dllexport) void splitTuple(char *tuple, char **english, char **portuguese)
+__declspec(dllexport) void splitTuple(char *restrict tuple, char **lang1, char **lang2)
 {
-	int i = 0;
+	unsigned int i = 0x00;
 
-	*english = tuple;
+	*lang1 = tuple;
 
-	while(tuple[i]!=':') ++i;
+	while(tuple[i] != ':') ++i;
 	tuple[i] = '\0';
 
-	*portuguese = &tuple[i+1];
+	*lang2 = tuple + i + 0x01;
+}
+
+__declspec(dllexport) int getAllWords(char *string, size_t length)
+{
+	if (wordFile == NULL) return -1;
+
+	int c, i = 0x00;
+
+	while((c = fgetc(wordFile)) != EOF)
+	{
+		if (i > length - 1) break;
+
+		string[i] = (char)c;
+		i++;
+	}
+
+	string[i] = '\0';
+
+	fseek(wordFile, 0x00, SEEK_SET);
+
+	return 0x01;
 }

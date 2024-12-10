@@ -11,10 +11,11 @@ int GetTextOfBox(HWND window_textbox, char *keep_text, int max_letters)
 	if (GetWindowTextLength(window_textbox) < max_letters)
 	{
 		GetWindowText(window_textbox, keep_text, max_letters);
-		return 0x00;
+
+		return 0x01;
 	}
 
-	return 0x01;
+	return 0x00;
 }
 
 LRESULT CALLBACK EditWordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -35,20 +36,42 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 			if (CreateWindow("EDIT", NULL, ES_LEFT | ES_LOWERCASE | WS_CHILD | WS_VISIBLE | WS_BORDER,
 				MAIN_WINDOW_WIDTH/0X02-TEXT_BOX_WINDOW_WIDTH/0X02, MAIN_WINDOW_HEIGHT/0x02-0x0a,
 				TEXT_BOX_WINDOW_WIDTH, TEXT_BOX_WINDOW_HEIGHT,
-				hwnd, (HMENU)TEXT_BOX_MAIN_WINDOW, main_hinstance, NULL) == NULL ||
+				hwnd, (HMENU)TEXT_BOX_MAIN_WINDOW, NULL, NULL) == NULL ||
 
 				CreateWindow("BUTTON", "ok", WS_CHILD | WS_VISIBLE | WS_BORDER,
 					MAIN_WINDOW_WIDTH/0x02+0x55, MAIN_WINDOW_HEIGHT/0x02+0x30, 
 					BUTTON_WINDOW_WIDTH, BUTTON_WINDOW_HEIGHT,
-					hwnd, (HMENU)OK_BUTTON, main_hinstance, NULL) == NULL ||
+					hwnd, (HMENU)OK_BUTTON, NULL, NULL) == NULL ||
 
 				CreateWindow("BUTTON", "words", WS_CHILD | WS_VISIBLE | WS_BORDER,
 					MAIN_WINDOW_WIDTH/0x02-0x95, MAIN_WINDOW_HEIGHT/0x02+0x30,
 					BUTTON_WINDOW_WIDTH, BUTTON_WINDOW_HEIGHT,
-					hwnd, (HMENU)WORDS_BUTTON, main_hinstance, NULL) == NULL
+					hwnd, (HMENU)WORDS_BUTTON, NULL, NULL) == NULL
 			) SendMessage(hwnd, WM_CLOSE, (WPARAM)NOT_POSSIBLE_CLEATE_CHILD, 0x00);
 
+			Tuple *tuple;
+			InitTuple(tuple);
+
+			getRandomTuple(tuple->tuple, sizeof(tuple->tuple)/sizeof(char));
+			splitTuple(tuple->tuple, &(tuple->str1), &(tuple->str2));
+
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)tuple);
+
 			return 0x00;
+		
+		case WM_PAINT:
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hwnd, &ps);
+			
+			char text[0xff];
+			int text_len;
+
+			//randomWord(text, 0xff/sizeof(char));
+			text_len = strlen(text);
+			
+			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-text_len, 0x32, text, text_len);
+			
+			EndPaint(hwnd, &ps);
 
 		case WM_COMMAND:
 			switch (wParam)
@@ -86,12 +109,16 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					break;
 			}
 
-			closeWordFile();
 			DestroyWindow(hwnd);
 
 			return 0x00;
 
 		case WM_DESTROY:
+			Tuple *tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+			free(tuple);
+			closeWordFile();
+
 			PostQuitMessage(0x00);
 		
 		default:
@@ -107,13 +134,19 @@ __declspec(dllexport) LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wP
 			HWND edit = CreateWindow(
 				"EDIT", "", ES_LEFT | ES_LOWERCASE | ES_MULTILINE | WS_CHILD | WS_VISIBLE,
 				0x00, 0x00, MAIN_WINDOW_WIDTH - 0x05, MAIN_WINDOW_HEIGHT- 0x20,
-				hwnd, NULL, main_hinstance, NULL
+				hwnd, NULL, NULL, NULL
 			);
 
 			if (edit == NULL) {
 				SendMessage(hwnd, WM_DESTROY, 0x00, 0x00);
+
 				return 0x00;
 			}
+
+			char words_file_content[0xff];
+			getAllWords(words_file_content, sizeof(words_file_content)/sizeof(char));
+
+			SetWindowText(edit, words_file_content);
 
 			edit_proc = (WNDPROC)GetWindowLongPtr(edit, GWLP_WNDPROC);
 			

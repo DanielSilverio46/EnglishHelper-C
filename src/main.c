@@ -4,6 +4,8 @@
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
+	if (loadWordFile() == false) createWordFile();
+
 	const char MAIN_CLASS[] = "main", WORDS_CLASS[] = "words";
 
 	// Main Window
@@ -41,8 +43,6 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 		MessageBox(NULL, "Not possible load windows", NULL, MB_OK | MB_ICONHAND);
 		return 0x00;
 	}
-
-	loadWordFile();
 
 	ShowWindow(hwnd_main, SHOW_OPENWINDOW);
 	ShowWindow(hwnd_words, SW_HIDE);

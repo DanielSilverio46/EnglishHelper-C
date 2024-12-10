@@ -15,6 +15,4 @@
  *												   V              							 */
 #define MAIN_COLOR_BACKGROUND_WINDOW (HBRUSH)(COLOR_WINDOW+1) 
 
-HINSTANCE main_hinstance;
-
 #endif

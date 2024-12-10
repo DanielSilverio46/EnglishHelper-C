@@ -7,14 +7,14 @@
 #include <stdint.h>
 #include <string.h>
 
-/// Defining height and width of windows
+/// Defining default height and width of windows
 #define TEXT_BOX_WINDOW_WIDTH 0xC8
 #define TEXT_BOX_WINDOW_HEIGHT 0x14
 
 #define BUTTON_WINDOW_WIDTH 0x32
 #define BUTTON_WINDOW_HEIGHT 0x19
 
-/// Defining child windows identifiers
+/// Defining default child windows identifiers
 #define OK_BUTTON 0X02
 #define WORDS_BUTTON 0X03
 #define TEXT_BOX_MAIN_WINDOW 0x01
