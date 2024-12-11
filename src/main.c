@@ -2,6 +2,8 @@
 #include "headers/window_flow.h"
 #include "headers/word.h"
 
+#define IDI_APP_ICON 101
+
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
 	if (loadWordFile() == false) createWordFile();
@@ -14,6 +16,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	MainWindowClass.hInstance = hinstance;
 	MainWindowClass.lpszClassName = MAIN_CLASS;
 	MainWindowClass.hbrBackground = MAIN_COLOR_BACKGROUND_WINDOW;
+	MainWindowClass.hIcon = LoadIcon(hinstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
 	WNDCLASS WordsWindowClass = {};
 	WordsWindowClass.lpfnWndProc = WordsProc;

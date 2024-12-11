@@ -11,7 +11,6 @@ int GetTextOfBox(HWND window_textbox, char *keep_text, int max_letters)
 	if (GetWindowTextLength(window_textbox) < max_letters)
 	{
 		GetWindowText(window_textbox, keep_text, max_letters);
-
 		return 0x01;
 	}
 
@@ -20,16 +19,15 @@ int GetTextOfBox(HWND window_textbox, char *keep_text, int max_letters)
 
 LRESULT CALLBACK EditWordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_HOTKEY && GetFocus() == hwnd)
-	{
-		return 0x00;
-	}
+	if (uMsg == WM_HOTKEY && GetFocus() == hwnd) return 0x00;
 
 	return CallWindowProc(edit_proc, hwnd, uMsg, wParam, lParam);
 }
 
 __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	Tuple *tuple;
+
 	switch (uMsg)
 	{
 		case WM_CREATE:
@@ -47,31 +45,30 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					MAIN_WINDOW_WIDTH/0x02-0x95, MAIN_WINDOW_HEIGHT/0x02+0x30,
 					BUTTON_WINDOW_WIDTH, BUTTON_WINDOW_HEIGHT,
 					hwnd, (HMENU)WORDS_BUTTON, NULL, NULL) == NULL
-			) SendMessage(hwnd, WM_CLOSE, (WPARAM)NOT_POSSIBLE_CLEATE_CHILD, 0x00);
+			) { SendMessage(hwnd, WM_CLOSE, (WPARAM)NOT_POSSIBLE_CLEATE_CHILD, 0x00); }
 
-			Tuple *tuple;
-			InitTuple(tuple);
+			InitTuple(&tuple);
 
 			getRandomTuple(tuple->tuple, sizeof(tuple->tuple)/sizeof(char));
-			splitTuple(tuple->tuple, &(tuple->str1), &(tuple->str2));
+			SplitTuple(tuple);
 
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)tuple);
 
 			return 0x00;
 		
 		case WM_PAINT:
+			int str1_len;
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hwnd, &ps);
 			
-			char text[0xff];
-			int text_len;
+			tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			str1_len = strlen(Str1(tuple));
 
-			//randomWord(text, 0xff/sizeof(char));
-			text_len = strlen(text);
-			
-			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-text_len, 0x32, text, text_len);
-			
+			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-str1_len, 0x32, Str1(tuple), str1_len);
+
 			EndPaint(hwnd, &ps);
+			
+			return 0x00;
 
 		case WM_COMMAND:
 			switch (wParam)
@@ -114,9 +111,9 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 			return 0x00;
 
 		case WM_DESTROY:
-			Tuple *tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-			free(tuple);
+			FreeTuple(tuple);
 			closeWordFile();
 
 			PostQuitMessage(0x00);

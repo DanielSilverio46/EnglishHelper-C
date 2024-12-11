@@ -1,35 +1,19 @@
 #include "headers\word.h"
 
-FILE *wordFile = NULL;
+/* Tuple Manipulation */
 
-__declspec(dllexport) void InitTuple(Tuple *tuple)
+dll void InitTuple(Tuple **restrict tuple)
 {
-	tuple = malloc(sizeof(Tuple));
+	(*tuple) = malloc(sizeof(Tuple));
 
-	tuple->str1 = NULL;
-	tuple-> str2 = NULL;
+	(*tuple)->str1 = NULL;
+	(*tuple)-> str2 = NULL;
 
-	tuple->sep = ':';
-	tuple->isep = 0x00;
+	(*tuple)->sep = ':';
+	(*tuple)->isep = 0x00;
 }
 
-__declspec(dllexport) inline void SetStrs(Tuple *tuple, char *str1, char *str2)
-{
-	tuple->str1 = str1;
-	tuple->str2 = str2;
-}
-
-__declspec(dllexport) inline void SetSep(Tuple *tuple, char sep)
-{
-	tuple->sep = sep;
-}
-
-__declspec(dllexport) inline void SetIsep(Tuple *tuple, unsigned int i)
-{
-	tuple->isep = i;
-}
-
-__declspec(dllexport) void FreeTuple(Tuple *tuple)
+dll void FreeTuple(Tuple *tuple)
 {
 	tuple->str1 = NULL;
 	tuple->str2 = NULL;
@@ -39,8 +23,35 @@ __declspec(dllexport) void FreeTuple(Tuple *tuple)
 	free(tuple);
 }
 
+dll inline char *Str1(Tuple *tuple)
+{
+	return tuple->str1;
+}
 
-__declspec(dllexport) void createWordFile(void)
+dll inline char *Str2(Tuple *tuple)
+{
+	return tuple->str2;
+}
+
+dll void SplitTuple(Tuple *tuple)
+{
+	unsigned int i = 0x00;
+
+	strcpy(tuple->buff, tuple->tuple);
+	tuple->str1 = tuple->buff;
+
+	while(tuple->buff[i] != tuple->sep) i++;
+
+	tuple->isep = i;
+	tuple->buff[i] = '\0';
+	tuple->str2 = tuple->buff + i + 1;
+}
+
+/* File Manipulation */
+
+FILE *wordFile = NULL;
+
+dll void createWordFile(void)
 {
 	wordFile = fopen("words.txt", "w");
 
@@ -52,7 +63,7 @@ __declspec(dllexport) void createWordFile(void)
 	}
 }
 
-__declspec(dllexport) bool loadWordFile(void)
+dll bool loadWordFile(void)
 {
 	wordFile = fopen("words.txt", "r");
 
@@ -60,12 +71,12 @@ __declspec(dllexport) bool loadWordFile(void)
 	else return true;
 }
 
-__declspec(dllexport) void closeWordFile(void)
+dll void closeWordFile(void)
 {
 	if (wordFile != NULL) fclose(wordFile);
 }
 
-__declspec(dllexport) void updateWordFile(const char *Words, size_t Total_Letters)
+dll void updateWordFile(const char *Words, size_t Total_Letters)
 {
 	if (Words == NULL) return;
 
@@ -78,7 +89,7 @@ __declspec(dllexport) void updateWordFile(const char *Words, size_t Total_Letter
 	loadWordFile();
 }
 
-__declspec(dllexport) int totalTuples(void)
+dll int totalTuples(void)
 {
 	if (wordFile == NULL) return -0x01;
 	
@@ -92,7 +103,7 @@ __declspec(dllexport) int totalTuples(void)
 	return i;
 }
 
-__declspec(dllexport) void getRandomTuple(char *store, unsigned int lengthStore)
+dll void getRandomTuple(char *store, unsigned int lengthStore)
 {
 	if (wordFile == NULL) return;
 	
@@ -110,19 +121,7 @@ __declspec(dllexport) void getRandomTuple(char *store, unsigned int lengthStore)
 	fseek(wordFile, 0x00, SEEK_SET);
 }
 
-__declspec(dllexport) void splitTuple(char *restrict tuple, char **lang1, char **lang2)
-{
-	unsigned int i = 0x00;
-
-	*lang1 = tuple;
-
-	while(tuple[i] != ':') ++i;
-	tuple[i] = '\0';
-
-	*lang2 = tuple + i + 0x01;
-}
-
-__declspec(dllexport) int getAllWords(char *string, size_t length)
+dll int getAllWords(char *string, size_t length)
 {
 	if (wordFile == NULL) return -1;
 
