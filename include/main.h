@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define dll __declspec(dllexport)
+
 #include <windows.h>
 #include <string.h>
 #include <stdlib.h>

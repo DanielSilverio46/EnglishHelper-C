@@ -1,46 +1,14 @@
-#include <stdint.h>
+#include "user.h"
 
-// Basic Functions to manage User points
-
-struct User {
-    uint16_t Points;
-    uint16_t Fails;
-};
-
-void initUser(void) 
+dll void initUser(UserData **restrict user)
 {
-    struct User *user = (struct User*)malloc(sizeof(struct User));
+    *user = (UserData*)malloc(sizeof(UserData));
 
-    user->Points = 0x00;
-    user->Fails = 0x00;
+    SetUserPoint((*user), 0x00);
+    SetUserFail((*user), 0x00);
 }
 
-void SetUserPoints(struct User* user, uint16_t points)
+dll void deleteUser(UserData *user)
 {
-	user->Points = points;
-}
-
-void SetUserFaills(struct User* user, uint16_t faills)
-{
-	user->Fails = faills;
-}
-
-void AddUserPoints(struct User* user, int points_to_sum)
-{
-	if (points_to_sum != NULL) user->Points += points_to_sum;
-}
-
-void AddUserFaills(struct User* user, int faills_to_sum)
-{
-	if (faills_to_sum != NULL) user->Points += faills_to_sum;
-}
-
-unsigned int GetUserPoints(struct User* user)
-{
-	return user->Points;
-}
-
-unsigned int GetUserFails(struct User* user)
-{
-	return user->Fails;
+	free(user);
 }

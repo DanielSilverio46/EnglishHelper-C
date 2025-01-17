@@ -1,20 +1,25 @@
-#include <stdio.h>
+#include "window_flow.h"
+#include "user.h"
+#include "log.h"
 
-#include "headers/window_flow.h"
-#include "headers/word.h"
-#include "headers/main.h"
+#include "others.c"
+
+typedef struct datas {
+	Tuple *tuple;
+	UserData *user_points;
+} WindowData;
 
 WNDPROC edit_proc;
 
-int GetTextOfBox(HWND window_textbox, char *keep_text, int max_letters)
+int GetTextOfBox(HWND textbox, char *keep_text, int max_chars)
 {
-	if (GetWindowTextLength(window_textbox) < max_letters)
+	if (GetWindowTextLength(textbox) < max_chars)
 	{
-		GetWindowText(window_textbox, keep_text, max_letters);
-		return 0x01;
+		GetWindowText(textbox, keep_text, max_chars);
+		return 0x00;
 	}
 
-	return 0x00;
+	return 0x01;
 }
 
 LRESULT CALLBACK EditWordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -26,7 +31,7 @@ LRESULT CALLBACK EditWordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	Tuple *tuple;
+	WindowData *data;
 
 	switch (uMsg)
 	{
@@ -47,28 +52,44 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					hwnd, (HMENU)WORDS_BUTTON, NULL, NULL) == NULL
 			) { SendMessage(hwnd, WM_CLOSE, (WPARAM)NOT_POSSIBLE_CLEATE_CHILD, 0x00); }
 
-			InitTuple(&tuple);
 
-			getRandomTuple(tuple->tuple, sizeof(tuple->tuple)/sizeof(char));
-			SplitTuple(tuple);
+			#pragma region UserData
+			data = (WindowData*)malloc(sizeof(WindowData));
 
-			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)tuple);
+			// Defining a tuple and user and passing to GWLP_USERDATA
+			InitTuple(&data->tuple);
+
+			getRandomTuple(GetTuple(data->tuple), sizeof(GetTuple(data->tuple))/sizeof(char));
+			SplitTuple(data->tuple);
+
+			initUser(&data->user_points);
+
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)data);
+
+			#pragma endregion
 
 			return 0x00;
 		
 		case WM_PAINT:
-			int str1_len;
+			char points[0xff] = "Points: ", fails[0xff] = "Fails: ";
+
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hwnd, &ps);
-			
-			tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-			str1_len = strlen(Str1(tuple));
+			data = (WindowData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-str1_len, 0x32, Str1(tuple), str1_len);
+			intToStr(GetUserPoints(data->user_points), &points[0x08], sizeof(points)/sizeof(char));
+			intToStr(GetUserFails(data->user_points), &fails[0x07], sizeof(fails)/sizeof(char));
+
+
+			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-strlen(GetStr1(data->tuple)), 0x32, GetStr1(data->tuple), strlen(GetStr1(data->tuple)));
+
+			TextOut(hdc, 0x32, 0x50, points, strlen(points));
+			TextOut(hdc, 0x140, 0x50, fails, strlen(fails));
 
 			EndPaint(hwnd, &ps);
 			
 			return 0x00;
+
 
 		case WM_COMMAND:
 			switch (wParam)
@@ -80,14 +101,24 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					break;
 
 				case OK_BUTTON:
-					HWND textbox = FindWindowEx(hwnd, NULL, "EDIT", NULL);
-					char TextInputed[0xff];
+					char text_inputed[0xff];
 
+					HWND textbox = FindWindowEx(hwnd, NULL, "EDIT", NULL);
+					data = (WindowData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+					
 					if (textbox != NULL)
 					{
-						if (GetTextOfBox(textbox, TextInputed, sizeof(TextInputed)/sizeof(char)) != 0x00)
+						if (GetTextOfBox(textbox, text_inputed, sizeof(text_inputed)/sizeof(char)) == 0x00)
 						{
-							MessageBox(NULL, "Error", NULL, MB_OK);
+							printf("Text inputed: %s - len: %llu\nText hided: %s - len: %llu\n", text_inputed, strlen(text_inputed),
+								GetStr2(data->tuple), strlen(GetStr2(data->tuple)));
+
+							if (strcmp(text_inputed, GetStr2(data->tuple)) == 0x00) IncUserPoint(data->user_points);
+							else IncUserFail(data->user_points);
+
+							InvalidateRect(hwnd, NULL, TRUE);
+
+							MessageBox(NULL, GetStr2(data->tuple), NULL, MB_OK);
 						}
 
 						SetWindowText(textbox, 0x00);
@@ -99,6 +130,15 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 			return 0x00;
 
 		case WM_CLOSE:
+			data = (WindowData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+			FreeTuple(data->tuple);
+			deleteUser(data->user_points);
+
+			free(data);
+
+			#pragma region Reporting possible errors
+
 			switch (wParam)
 			{
 				case NOT_POSSIBLE_CLEATE_CHILD:
@@ -106,16 +146,15 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					break;
 			}
 
+			#pragma endregion
+
+			CloseConsoleLog();
+
 			DestroyWindow(hwnd);
 
 			return 0x00;
 
 		case WM_DESTROY:
-			tuple = (Tuple*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-			FreeTuple(tuple);
-			closeWordFile();
-
 			PostQuitMessage(0x00);
 		
 		default:

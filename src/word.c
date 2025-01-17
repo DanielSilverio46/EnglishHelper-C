@@ -1,4 +1,7 @@
-#include "headers\word.h"
+#include "word.h"
+#include <windows.h>
+
+#include <stdio.h>
 
 /* Tuple Manipulation */
 
@@ -15,36 +18,28 @@ dll void InitTuple(Tuple **restrict tuple)
 
 dll void FreeTuple(Tuple *tuple)
 {
-	tuple->str1 = NULL;
-	tuple->str2 = NULL;
-	tuple->sep = '\0';
-	tuple->isep = 0x00;
-
 	free(tuple);
-}
-
-dll inline char *Str1(Tuple *tuple)
-{
-	return tuple->str1;
-}
-
-dll inline char *Str2(Tuple *tuple)
-{
-	return tuple->str2;
 }
 
 dll void SplitTuple(Tuple *tuple)
 {
+	strcpy(tuple->buff, tuple->tuple);
+
+	size_t buff_len = strlen(tuple->buff);
 	unsigned int i = 0x00;
 
-	strcpy(tuple->buff, tuple->tuple);
+	while(i != buff_len)
+	{
+		if (tuple->buff[i] == tuple->sep){
+			tuple->isep = i;
+			tuple->buff[i] = '\0';
+		}
+		if (tuple->buff[i] == '\n') tuple->buff[i] = '\0';
+		i++;
+	}
+
 	tuple->str1 = tuple->buff;
-
-	while(tuple->buff[i] != tuple->sep) i++;
-
-	tuple->isep = i;
-	tuple->buff[i] = '\0';
-	tuple->str2 = tuple->buff + i + 1;
+	tuple->str2 = tuple->buff + tuple->isep + 0x01;
 }
 
 /* File Manipulation */
@@ -114,9 +109,10 @@ dll void getRandomTuple(char *store, unsigned int lengthStore)
 	
 	if (t == -0x01) return;
 	
-	while (randWord == 0x00) randWord = rand() % (t + 0x01);
-
+	do { randWord = rand() % (t + 0x01); } while (randWord == 0x00);
 	for (int i=0x00; i != randWord; ++i) fgets(store, lengthStore, wordFile);
+
+	size_t store_len = strlen(store);
 
 	fseek(wordFile, 0x00, SEEK_SET);
 }

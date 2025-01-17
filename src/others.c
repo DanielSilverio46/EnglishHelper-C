@@ -15,7 +15,7 @@ int intToStr(unsigned int num, char *store, int length_store)
 		store[decimal_places] = (char)(num % 0x0A) + 0x30;
 		num /= 0x0A;
 		decimal_places--;
-	} while (num != 0x00);
+	} while (num > 0x00);
 
 	return 0x00;
 }

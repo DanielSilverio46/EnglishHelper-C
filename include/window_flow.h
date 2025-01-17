@@ -1,11 +1,18 @@
 #ifndef GFUNC_H
 #define GFUNC_H
 
+#define dll __declspec(dllexport)
+
 #include <windows.h>
 #include <commctrl.h>
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "main.h"
+#include "word.h"
+#include "user.h"
 
 /// Defining default height and width of windows
 #define TEXT_BOX_WINDOW_WIDTH 0xC8
@@ -22,7 +29,7 @@
 /// Defining error
 #define NOT_POSSIBLE_CLEATE_CHILD 0x01
 
-__declspec(dllexport) extern LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-__declspec(dllexport) extern LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+dll extern LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+dll extern LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #endif

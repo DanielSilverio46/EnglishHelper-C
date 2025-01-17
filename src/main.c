@@ -1,31 +1,50 @@
-#include "headers/main.h"
-#include "headers/window_flow.h"
-#include "headers/word.h"
+#include "main.h"
+#include "window_flow.h"
+#include "word.h"
+#include "user.h"
+#include "log.h"
 
-#define IDI_APP_ICON 101
+#define IDI_APP_ICON 0x65
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
-	if (loadWordFile() == false) createWordFile();
+	CreateConsoleLog();
+
+	printf("Opening word file...\n");
+
+	if (loadWordFile() == false)
+	{
+		printf("File not found.\nCreating new word file...\n");
+		createWordFile();
+	}
 
 	const char MAIN_CLASS[] = "main", WORDS_CLASS[] = "words";
 
+	#pragma region Config of Windows
+
 	// Main Window
-	WNDCLASS MainWindowClass = {};
+	WNDCLASSEX MainWindowClass = {};
+	MainWindowClass.cbSize = sizeof(WNDCLASSEX);
 	MainWindowClass.lpfnWndProc = MainProc;
 	MainWindowClass.hInstance = hinstance;
 	MainWindowClass.lpszClassName = MAIN_CLASS;
 	MainWindowClass.hbrBackground = MAIN_COLOR_BACKGROUND_WINDOW;
 	MainWindowClass.hIcon = LoadIcon(hinstance, MAKEINTRESOURCE(IDI_APP_ICON));
+	MainWindowClass.hIconSm = LoadIcon(hinstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
-	WNDCLASS WordsWindowClass = {};
+	WNDCLASSEX WordsWindowClass = {};
+	WordsWindowClass.cbSize = sizeof(WNDCLASSEX);
 	WordsWindowClass.lpfnWndProc = WordsProc;
 	WordsWindowClass.hInstance = hinstance;
 	WordsWindowClass.lpszClassName = WORDS_CLASS;
 	WordsWindowClass.hbrBackground = MAIN_COLOR_BACKGROUND_WINDOW;
+	
+	#pragma endregion
 
-	RegisterClass(&MainWindowClass);
-	RegisterClass(&WordsWindowClass);
+	RegisterClassEx(&MainWindowClass);
+	RegisterClassEx(&WordsWindowClass);
+
+	printf("Creating windows...\n");
 
 	HWND hwnd_main = CreateWindowEx(
 		0x00, MAIN_CLASS, "English Helper",
@@ -43,14 +62,18 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	if (hwnd_main == NULL || hwnd_words == NULL)
 	{
-		MessageBox(NULL, "Not possible load windows", NULL, MB_OK | MB_ICONHAND);
+		MessageBox(NULL, "Not possible load windows", NULL, MB_ICONERROR);
 		return 0x00;
 	}
+
+	printf("Opening main window...\n");
 
 	ShowWindow(hwnd_main, SHOW_OPENWINDOW);
 	ShowWindow(hwnd_words, SW_HIDE);
 
 	MSG msg = {};
+
+	printf("\nRuning messages\n");
 
 	while(GetMessage(&msg, NULL, 0x00, 0x00) > 0x00) {
 		TranslateMessage(&msg);
