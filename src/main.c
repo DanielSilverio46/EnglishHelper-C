@@ -8,8 +8,23 @@
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
+	/*
+	char *params[0x5];
+
+	for(unsigned int i = 0, count_split = 0; i != strlen(pCmdLine); ++i)
+	{
+		if (pCmdLine[i] == ' ')
+		{
+			pCmdLine[i] = '\0';
+			params[count_split] = &pCmdLine[i];
+			count_split++;
+		}
+	}
+	*/
+
 	CreateConsoleLog();
 
+	printf("%s, %d\n\n", pCmdLine, nCmdShow);
 	printf("Opening word file...\n");
 
 	if (loadWordFile() == false)
@@ -73,7 +88,7 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	MSG msg = {};
 
-	printf("\nRuning messages\n");
+	printf("\nRunning messages\n");
 
 	while(GetMessage(&msg, NULL, 0x00, 0x00) > 0x00) {
 		TranslateMessage(&msg);

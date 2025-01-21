@@ -1,24 +1,18 @@
-#include "word.h"
 #include <windows.h>
+#include "word.h"
 
-#include <stdio.h>
-
-/* Tuple Manipulation */
+#pragma region Tuple Manipulation
 
 dll void InitTuple(Tuple **restrict tuple)
 {
 	(*tuple) = malloc(sizeof(Tuple));
 
-	(*tuple)->str1 = NULL;
-	(*tuple)-> str2 = NULL;
+	SetStr1((*tuple), NULL);
+	SetStr2((*tuple), NULL);
 
-	(*tuple)->sep = ':';
-	(*tuple)->isep = 0x00;
-}
+	SetTupleSeparator((*tuple), ':');
 
-dll void FreeTuple(Tuple *tuple)
-{
-	free(tuple);
+	SetIndexSeparator((*tuple), 0x00);
 }
 
 dll void SplitTuple(Tuple *tuple)
@@ -28,21 +22,33 @@ dll void SplitTuple(Tuple *tuple)
 	size_t buff_len = strlen(tuple->buff);
 	unsigned int i = 0x00;
 
-	while(i != buff_len)
+	for(unsigned int i; i != buff_len; ++i)
 	{
 		if (tuple->buff[i] == tuple->sep){
-			tuple->isep = i;
+			SetIndexSeparator(tuple, i);
 			tuple->buff[i] = '\0';
 		}
+
 		if (tuple->buff[i] == '\n') tuple->buff[i] = '\0';
-		i++;
 	}
 
-	tuple->str1 = tuple->buff;
-	tuple->str2 = tuple->buff + tuple->isep + 0x01;
+	SetStr1(tuple, tuple->buff);
+	SetStr2(tuple, tuple->buff + tuple->isep + 0x01);
 }
 
-/* File Manipulation */
+dll inline void SetStr1(Tuple *tuple, char *string)
+{
+	tuple->str1 = string;
+}
+
+dll inline void SetStr2(Tuple *tuple, char *string)
+{
+	tuple->str2 = string;
+}
+
+#pragma endregion
+
+#pragma region Word Manipulation
 
 FILE *wordFile = NULL;
 
@@ -75,10 +81,11 @@ dll void updateWordFile(const char *Words, size_t Total_Letters)
 {
 	if (Words == NULL) return;
 
-	if (wordFile != NULL) closeWordFile();
+	closeWordFile();
 
 	wordFile = fopen("words.txt", "w");
-	fwrite(Words, sizeof(char), Total_Letters, wordFile);
+
+	fprintf(wordFile, "%s", Words);
 	fclose(wordFile);
 
 	loadWordFile();
@@ -119,13 +126,13 @@ dll void getRandomTuple(char *store, unsigned int lengthStore)
 
 dll int getAllWords(char *string, size_t length)
 {
-	if (wordFile == NULL) return -1;
+	if (wordFile == NULL) return -0x01;
 
 	int c, i = 0x00;
 
 	while((c = fgetc(wordFile)) != EOF)
 	{
-		if (i > length - 1) break;
+		if (i > length - 0x01) break;
 
 		string[i] = (char)c;
 		i++;
@@ -137,3 +144,5 @@ dll int getAllWords(char *string, size_t length)
 
 	return 0x01;
 }
+
+#pragma endregion

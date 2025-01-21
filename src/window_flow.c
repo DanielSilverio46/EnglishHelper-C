@@ -24,7 +24,27 @@ int GetTextOfBox(HWND textbox, char *keep_text, int max_chars)
 
 LRESULT CALLBACK EditWordsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_HOTKEY && GetFocus() == hwnd) return 0x00;
+	if (uMsg == WM_HOTKEY && GetFocus() == hwnd) {
+		printf("Saving words...");
+
+		unsigned long long size_save_words = 0xff;
+		char *save_words = (char*)malloc(sizeof(char) * 0xff);
+
+		// while the size of save_words is incompatible with the size of text inputed,
+		// its size (save_words) will double.
+		do {
+
+			save_words = (char*)realloc(save_words, (size_save_words *= 0x02) / sizeof(char));
+		
+		} while(GetTextOfBox(hwnd, save_words, size_save_words/sizeof(char)) == 0x00);
+
+
+		updateWordFile(save_words, strlen(save_words));
+
+		free(save_words);
+
+		return 0x00;
+	}
 
 	return CallWindowProc(edit_proc, hwnd, uMsg, wParam, lParam);
 }
@@ -80,7 +100,6 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 			intToStr(GetUserPoints(data->user_points), &points[0x08], sizeof(points)/sizeof(char));
 			intToStr(GetUserFails(data->user_points), &fails[0x07], sizeof(fails)/sizeof(char));
 
-
 			TextOut(hdc, (MAIN_WINDOW_HEIGHT/0X02)-strlen(GetStr1(data->tuple)), 0x32, GetStr1(data->tuple), strlen(GetStr1(data->tuple)));
 
 			TextOut(hdc, 0x32, 0x50, points, strlen(points));
@@ -110,15 +129,16 @@ __declspec(dllexport) LRESULT CALLBACK MainProc(HWND hwnd, UINT uMsg, WPARAM wPa
 					{
 						if (GetTextOfBox(textbox, text_inputed, sizeof(text_inputed)/sizeof(char)) == 0x00)
 						{
-							printf("Text inputed: %s - len: %llu\nText hided: %s - len: %llu\n", text_inputed, strlen(text_inputed),
+							printf("Text inputed: %s - len: %llu\nText hided: %s - len: %llu\n\n", text_inputed, strlen(text_inputed),
 								GetStr2(data->tuple), strlen(GetStr2(data->tuple)));
 
 							if (strcmp(text_inputed, GetStr2(data->tuple)) == 0x00) IncUserPoint(data->user_points);
 							else IncUserFail(data->user_points);
 
-							InvalidateRect(hwnd, NULL, TRUE);
+							getRandomTuple(GetTuple(data->tuple), sizeof(GetTuple(data->tuple))/sizeof(char));
+							SplitTuple(data->tuple);
 
-							MessageBox(NULL, GetStr2(data->tuple), NULL, MB_OK);
+							InvalidateRect(hwnd, NULL, TRUE);
 						}
 
 						SetWindowText(textbox, 0x00);
@@ -167,6 +187,8 @@ __declspec(dllexport) LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wP
 	switch (uMsg)
 	{
 		case WM_CREATE:
+			char words_file_content[0xff];
+
 			HWND edit = CreateWindow(
 				"EDIT", "", ES_LEFT | ES_LOWERCASE | ES_MULTILINE | WS_CHILD | WS_VISIBLE,
 				0x00, 0x00, MAIN_WINDOW_WIDTH - 0x05, MAIN_WINDOW_HEIGHT- 0x20,
@@ -179,7 +201,6 @@ __declspec(dllexport) LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wP
 				return 0x00;
 			}
 
-			char words_file_content[0xff];
 			getAllWords(words_file_content, sizeof(words_file_content)/sizeof(char));
 
 			SetWindowText(edit, words_file_content);
@@ -187,7 +208,8 @@ __declspec(dllexport) LRESULT CALLBACK WordsProc(HWND hwnd, UINT uMsg, WPARAM wP
 			edit_proc = (WNDPROC)GetWindowLongPtr(edit, GWLP_WNDPROC);
 			
 			RegisterHotKey(edit, 0x01, MOD_CONTROL | MOD_NOREPEAT, 0x53);
-			if (SetWindowLongPtr(edit, GWLP_WNDPROC, (LONG_PTR)EditWordsProc) == 0) MessageBox(NULL, "Error", NULL, MB_OK);
+			if (SetWindowLongPtr(edit, GWLP_WNDPROC, (LONG_PTR)EditWordsProc) == 0)
+				MessageBox(NULL, "Error", NULL, MB_OK);
 
 			return 0x00;
 

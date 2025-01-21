@@ -23,19 +23,31 @@ typedef struct tuple
 
 // Tuple Manipulation
 
+dll extern void InitTuple(Tuple **restrict tuple);
+
+#define FreeTuple(Tuple) free(Tuple)
+
+// "Devide" the tuple string in two.
+//
+// The tuple string has a separator, this separator
+// is changed to null character, then the var str1 point to
+// begin of the tuple string. The var str2 point to the next char
+// after nulll char.
+dll extern void SplitTuple(Tuple *tuple);
+
 #define GetTuple(Tuple) (Tuple->tuple)
+
+#define GetTupleSeparator(Tuple) (Tuple->sep)
+#define SetTupleSeparator(Tuple, Char) (Tuple->sep = Char)
+
+#define SetIndexSeparator(Tuple, Index) (Tuple->isep = Index)
+
+dll extern inline void SetStr1(Tuple *tuple, char *string);
+dll extern inline void SetStr2(Tuple *tuple, char *string);
 
 #define GetStr1(Tuple) (Tuple->str1)
 #define GetStr2(Tuple) (Tuple->str2)
 
-#define GetTupleSeparator(Tuple) (Tuple->sep)
-
-#define SetTupleSeparator(Tuple, Char) (Tuple->sep = Char)
-
-dll extern void InitTuple(Tuple **restrict tuple);
-dll extern void FreeTuple(Tuple *tuple);
-
-dll extern void SplitTuple(Tuple *tuple);
 
 // Words Manipulation
 
