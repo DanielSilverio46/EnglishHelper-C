@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
+#include "windows.h"
 #include "word.h"
 #include "user.h"
 
